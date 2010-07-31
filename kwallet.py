@@ -24,10 +24,6 @@ class KWallet(object):
         # TODO Write close function and implement context manager
         self.iface.close(self.__kw, True, self.appid)
 
-    def get_password(self, key):
-        return self.iface.readPassword(self.__handle, self.__folder,
-                                       key, self.appid, utf8_strings=True).decode('UTF8')
-
     def get(self, key, field=u'password'):
         res = self.iface.readMap(self.__handle, self.__folder,
                                  key, self.appid,
