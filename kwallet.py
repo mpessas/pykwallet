@@ -1,10 +1,18 @@
 # -*- coding: utf-8 -*-
-
+"""Simple interface to kwallet through dbus."""
 import dbus
 import binascii
 
+
 class KWallet(object):
+    """Class to handle communication with kwallet through dbus."""
+
     def __init__(self, application, wallet=None):
+        """Initializer.
+
+        @param application application identifier
+        @param wallet wallet name
+        """
         self.appid = application
         self.__bus = dbus.SessionBus()
         name = u'org.kde.kwalletd'
@@ -16,45 +24,55 @@ class KWallet(object):
             self.wallet = wallet
         else:
             self.wallet = self.iface.localWallet()
-
-    def open(self):
-        self.__handle = self.iface.open(self.wallet, 0, self.appid)
+        self.__handle = None
+        self.__folder = None
 
     def close(self):
-        # TODO Write close function and implement context manager
+        """Close the wallet."""
+        # TODO: implement context manager
         self.iface.close(self.__handle, False, self.appid)
 
     def get(self, entry, key=u'password'):
-        res = self.get_dict(entry)
+        """Return the value for the request.
+
+        Raises EntryNotFoundError, if it does not exist."""
+        res = self._get_dict(entry)
         return res[key]
 
-    def get_dict(self, entry):
-        res = self.iface.readMap(self.__handle, self.__folder,
-                                 entry, self.appid,
-                                 byte_arrays=True, utf8_strings=True)
-        if res == 'None':
-            raise EntryNotFoundError(u'Entry %s not found' % entry)
-        res = self._decode(res)
-        return res
-        
+    def open(self):
+        """Open the wallet."""
+        self.__handle = self.iface.open(self.wallet, 0, self.appid)
 
     def set_folder(self, folder):
+        """Set the desired folder for subsequent operations."""
         if not self.iface.hasFolder(self.__handle, folder, self.appid):
             self.iface.createFolder(self.__handle, folder, self.appid)
         self.__folder = folder
 
     def set_value(self, entry, value, key=u'password'):
+        """Sets the requested value forthe specified key in the entry."""
         try:
-            info = self.get_dict(entry)
+            info = self._get_dict(entry)
         except EntryNotFoundError:
             info = {}
         info[key] = value
         info = self._encode(info)
         info = dbus.ByteArray(info)
-        self.iface.writeMap(self.__handle, self.__folder, entry, info, self.appid)
+        self.iface.writeMap(self.__handle, self.__folder,
+                            entry, info, self.appid)
+
+    def _binary_to_int(self, value, base=16):
+        """Converts binary data to an integer."""
+        return int(binascii.b2a_hex(value), base)
+
+    def _calculate_length(self, data):
+        """Calculates the length of the next entry in a dbus.ByteArray."""
+        length = (hex(len(data) * 2))[2:]
+        length = '00000000' + length
+        return length[-8:]
 
     def _decode(self, value):
-        """Decode a dbus.ByteArray bsaed on a qmap.
+        """Decode a dbus.ByteArray based on a qmap.
 
         The first 4 bytes are the number of entries."""
         length = self._binary_to_int(value[:4])
@@ -69,6 +87,7 @@ class KWallet(object):
         return info
 
     def _encode(self, value):
+        """Encode a dict to a dbus.ByteArray."""
         data = []
         for (entry, val) in value.items():
             data.append(entry)
@@ -82,22 +101,25 @@ class KWallet(object):
             for c in d:
                 enc += '\x00' + c
         return enc
-            
-    def _binary_to_int(self, value, base=16):
-        return int(binascii.b2a_hex(value), base)
+
+    def _get_dict(self, entry):
+        """Return the whole dictionary for the specified entry."""
+        res = self.iface.readMap(self.__handle, self.__folder,
+                                 entry, self.appid,
+                                 byte_arrays=True, utf8_strings=True)
+        if res == 'None':
+            raise EntryNotFoundError(u'Entry %s not found' % entry)
+        res = self._decode(res)
+        return res
 
     def _next_entry(self, value):
+        """Returns the next entry of a dbus.ByteArray."""
         length = self._binary_to_int(value[:4])
         data = value[4:length + 4]
         data = ''.join(x for x in data if x != '\x00')
         return (data, length + 4)
 
-    def _calculate_length(self, data):
-        length = (hex(len(data) * 2))[2:]
-        length = '00000000' + length
-        return length[-8:]
-
-
 
 class EntryNotFoundError(Exception):
+    """Exception when a requested entry does not exist."""
     pass
