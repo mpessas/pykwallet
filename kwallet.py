@@ -24,30 +24,34 @@ class KWallet(object):
         # TODO Write close function and implement context manager
         self.iface.close(self.__kw, True, self.appid)
 
-    def get(self, key, field=u'password'):
+    def get(self, entry, key=u'password'):
+        res = self.get_dict(entry)
+        return res[key]
+
+    def get_dict(self, entry):
         res = self.iface.readMap(self.__handle, self.__folder,
-                                 key, self.appid,
+                                 entry, self.appid,
                                  byte_arrays=True, utf8_strings=True)
         if res == 'None':
-            raise EntryNotFoundError(u'Entry %s not found' % key)
-        info = self._decode(res)
-        return info[field]
+            raise EntryNotFoundError(u'Entry %s not found' % entry)
+        res = self._decode(res)
+        return res
+        
 
     def set_folder(self, folder):
         if not self.iface.hasFolder(self.__handle, folder, self.appid):
             self.iface.createFolder(self.__handle, folder, self.appid)
         self.__folder = folder
 
-    def set_value(self, key, value, field=u'password'):
+    def set_value(self, entry, value, key=u'password'):
         try:
-            info = self.get(key, field)
-        except (EntryNotFoundError, KeyError):
+            info = self.get_dict(entry)
+        except EntryNotFoundError:
             info = {}
-        info[field] = value
+        info[key] = value
         info = self._encode(info)
         info = dbus.ByteArray(info)
-        print repr(info)
-        self.iface.writeMap(self.__handle, self.__folder, key, info, self.appid)
+        self.iface.writeMap(self.__handle, self.__folder, entry, info, self.appid)
 
     def _decode(self, value):
         """Decode a dbus.ByteArray bsaed on a qmap.
@@ -57,17 +61,17 @@ class KWallet(object):
         info = {}
         value = value[4:]
         for i in xrange(length):
-            (key, length) = self._next_entry(value)
+            (entry, length) = self._next_entry(value)
             value = value[length:]
             (data, length) = self._next_entry(value)
             value = value[length:]
-            info[key] = data
+            info[entry] = data
         return info
 
     def _encode(self, value):
         data = []
-        for (key, val) in value.items():
-            data.append(key)
+        for (entry, val) in value.items():
+            data.append(entry)
             data.append(val)
         length = (hex(len(value.keys())))[2:]
         enc = '00000000' + length
