@@ -22,7 +22,7 @@ class KWallet(object):
 
     def close(self):
         # TODO Write close function and implement context manager
-        self.iface.close(self.__kw, True, self.appid)
+        self.iface.close(self.__handle, False, self.appid)
 
     def get(self, entry, key=u'password'):
         res = self.get_dict(entry)
