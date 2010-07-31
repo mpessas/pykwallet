@@ -49,7 +49,7 @@ class KWallet(object):
             self.iface.createFolder(self.__handle, folder, self.appid)
         self.__folder = folder
 
-    def set_value(self, entry, value, key=u'password'):
+    def set(self, entry, value, key=u'password'):
         """Sets the requested value forthe specified key in the entry."""
         try:
             info = self._get_dict(entry)
