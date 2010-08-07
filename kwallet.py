@@ -26,6 +26,7 @@ class KWallet(object):
             self.wallet = self.iface.localWallet()
         self.__handle = None
         self.__folder = None
+        self.__encoding = 'utf-16-be'
 
     def close(self):
         """Close the wallet."""
@@ -67,7 +68,7 @@ class KWallet(object):
 
     def _calculate_length(self, data):
         """Calculates the length of the next entry in a dbus.ByteArray."""
-        length = (hex(len(data) * 2))[2:]
+        length = (hex(len(data)))[2:]
         length = '00000000' + length
         return length[-8:]
 
@@ -90,16 +91,15 @@ class KWallet(object):
         """Encode a dict to a dbus.ByteArray."""
         data = []
         for (entry, val) in value.items():
-            data.append(entry)
-            data.append(val)
+            data.append(entry.encode(self.__encoding))
+            data.append(val.encode(self.__encoding))
         length = (hex(len(value.keys())))[2:]
         enc = '00000000' + length
         enc = binascii.a2b_hex(enc[-8:])
         for d in data:
             length = self._calculate_length(d)
             enc += binascii.a2b_hex(length)
-            for c in d:
-                enc += '\x00' + c
+            enc += d
         return enc
 
     def _get_dict(self, entry):
@@ -116,7 +116,7 @@ class KWallet(object):
         """Returns the next entry of a dbus.ByteArray."""
         length = self._binary_to_int(value[:4])
         data = value[4:length + 4]
-        data = ''.join(x for x in data if x != '\x00')
+        data = data.decode(self.__encoding)
         return (data, length + 4)
 
 

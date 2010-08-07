@@ -28,6 +28,13 @@ class TestKWallet(unittest.TestCase):
         entry = "test"
         value = "test_password"
         self.kw.set(entry, value)
+        self.assertEqual(self.kw.get(entry), value)
+
+    def test_set_unicode(self):
+        entry = u'δοκιμή'
+        value = u'δοκιμή'
+        self.kw.set(entry, value)
+        self.assertEqual(self.kw.get(entry), value)
 
 
 if __name__ == '__main__':
