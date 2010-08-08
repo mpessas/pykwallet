@@ -2,6 +2,7 @@
 """Simple interface to kwallet through dbus."""
 
 import dbus
+import scipy
 import binascii
 
 __version__ = '0.1'
@@ -71,9 +72,7 @@ class KWallet(object):
 
     def _calculate_length(self, data):
         """Calculates the length of the next entry in a dbus.ByteArray."""
-        length = (hex(len(data)))[2:]
-        length = '00000000' + length
-        return length[-8:]
+        return scipy.int32(len(data)).newbyteorder('B').tostring()
 
     def _decode(self, value):
         """Decode a dbus.ByteArray based on a qmap.
@@ -96,13 +95,9 @@ class KWallet(object):
         for (entry, val) in value.items():
             data.append(entry.encode(self.__encoding))
             data.append(val.encode(self.__encoding))
-        length = (hex(len(value.keys())))[2:]
-        enc = '00000000' + length
-        enc = binascii.a2b_hex(enc[-8:])
+        enc = self._calculate_length(value.keys())
         for d in data:
-            length = self._calculate_length(d)
-            enc += binascii.a2b_hex(length)
-            enc += d
+            enc += self._calculate_length(d) + d
         return enc
 
     def _get_dict(self, entry):
