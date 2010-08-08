@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from kwallet import KWallet, EntryNotFoundError
+from pykwallet import KWallet, EntryNotFoundError
 
 
 class TestKWallet(unittest.TestCase):

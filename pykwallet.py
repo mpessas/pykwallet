@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """Simple interface to kwallet through dbus."""
+
 import dbus
 import binascii
+
+__version__ = '0.1'
 
 
 class KWallet(object):
