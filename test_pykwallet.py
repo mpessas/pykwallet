@@ -8,11 +8,11 @@ class TestKWallet(unittest.TestCase):
 
     def setUp(self):
         self.kw = KWallet("test_kwallet")
-        self.kw.open()
+        self.kw._open()
         self.kw.set_folder('test_folder')
 
     def tearDown(self):
-        self.kw.close()
+        self.kw._close()
 
     def test_get_error(self):
         entry = "test1"

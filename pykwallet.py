@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """Simple interface to kwallet through dbus."""
 
+
+import binascii
+import contextlib
 import dbus
 import scipy
-import binascii
 
-__version__ = '0.1'
+__version__ = '0.2'
 
 
 class KWallet(object):
@@ -32,11 +34,6 @@ class KWallet(object):
         self.__folder = None
         self.__encoding = 'utf-16-be'
 
-    def close(self):
-        """Close the wallet."""
-        # TODO: implement context manager
-        self.iface.close(self.__handle, False, self.appid)
-
     def get(self, entry, key=u'password'):
         """Return the value for the request.
 
@@ -44,9 +41,12 @@ class KWallet(object):
         res = self._get_dict(entry)
         return res[key]
 
+    @contextlib.contextmanager
     def open(self):
-        """Open the wallet."""
-        self.__handle = self.iface.open(self.wallet, 0, self.appid)
+        """Open a connection to a wallet in a context manager instance."""
+        self._open()
+        yield
+        self._close()
 
     def set_folder(self, folder):
         """Set the desired folder for subsequent operations."""
@@ -73,6 +73,11 @@ class KWallet(object):
     def _calculate_length(self, data):
         """Calculates the length of the next entry in a dbus.ByteArray."""
         return scipy.int32(len(data)).newbyteorder('B').tostring()
+
+    def _close(self):
+        """Close the wallet."""
+        # TODO: implement context manager
+        self.iface.close(self.__handle, False, self.appid)
 
     def _decode(self, value):
         """Decode a dbus.ByteArray based on a qmap.
@@ -116,6 +121,10 @@ class KWallet(object):
         data = value[4:length + 4]
         data = data.decode(self.__encoding)
         return (data, length + 4)
+
+    def _open(self):
+        """Open the wallet."""
+        self.__handle = self.iface.open(self.wallet, 0, self.appid)
 
 
 class EntryNotFoundError(Exception):
