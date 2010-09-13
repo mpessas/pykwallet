@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Simple interface to kwallet through dbus."""
+"""Simple interface to kwallet through dbus.
+
+Allows setting and getting items from any wallet in the Map section.
+"""
 
 
 import binascii
@@ -83,7 +86,6 @@ class KWallet(object):
 
     def _close(self):
         """Close the wallet."""
-        # TODO: implement context manager
         self.iface.close(self.__handle, False, self.appid)
 
     def _decode(self, value):
@@ -137,6 +139,7 @@ class KWallet(object):
 class EntryNotFoundError(Exception):
     """Exception raised, when a requested entry does not exist."""
     pass
+
 
 class ConnectionRefusedError(Exception):
     """Exception raised, when connecting to the session bus is not possible."""
