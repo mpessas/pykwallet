@@ -10,6 +10,6 @@ setup (
     author_email = "mpessas@gmail.com",
     description = "Module to store and retrieve data from KWallet.",
     license = "GPL",
-    test_suite = "pykwallet/test/test_pykwallet",
+    test_suite = "pykwallet.test.test_pykwallet",
     requires = ["dbus", "scipy"],
 )
