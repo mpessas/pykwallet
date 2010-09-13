@@ -98,14 +98,6 @@ class KWallet(object):
             info[entry] = data
         return info
 
-    def _next_data(self, value):
-        while value:
-            (entry, length) = self._next_entry(value)
-            value = value[length:]
-            (data, length) = self._next_entry(value)
-            value = value[length:]
-            yield (entry, data)
-
     def _encode(self, value):
         """Encode a dict to a dbus.ByteArray."""
         data = []
@@ -126,6 +118,18 @@ class KWallet(object):
             raise EntryNotFoundError(u'Entry %s not found' % entry)
         res = self._decode(res)
         return res
+
+    def _next_data(self, value):
+        """Returns a tuple (entry, data) for the next entry.
+
+        Generator function.
+        """
+        while value:
+            (entry, length) = self._next_entry(value)
+            value = value[length:]
+            (data, length) = self._next_entry(value)
+            value = value[length:]
+            yield (entry, data)
 
     def _next_entry(self, value):
         """Returns the next entry of a dbus.ByteArray."""
