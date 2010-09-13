@@ -16,15 +16,21 @@ class KWallet(object):
     def __init__(self, application, wallet=None):
         """Initializer.
 
+        Connects through dbus to kwallet.
+
         @param application application identifier
         @param wallet wallet name
         """
         self.appid = application
-        self.__bus = dbus.SessionBus()
+        try:
+            self.__bus = dbus.SessionBus()
+        except dbus.DBusException:
+            raise ConnectionRefusedError
         name = u'org.kde.kwalletd'
         object_path = u'/modules/kwalletd'
         self.__kw = self.__bus.get_object(name, object_path)
         interface = u'org.kde.KWallet'
+        # kwallet will be started if needed
         self.iface = dbus.Interface(self.__kw, dbus_interface=interface)
         if wallet:
             self.wallet = wallet
@@ -37,7 +43,8 @@ class KWallet(object):
     def get(self, entry, key=u'password'):
         """Return the value for the request.
 
-        Raises EntryNotFoundError, if it does not exist."""
+        Raises EntryNotFoundError, if it does not exist.
+        """
         res = self._get_dict(entry)
         return res[key]
 
@@ -128,5 +135,9 @@ class KWallet(object):
 
 
 class EntryNotFoundError(Exception):
-    """Exception when a requested entry does not exist."""
+    """Exception raised, when a requested entry does not exist."""
+    pass
+
+class ConnectionRefusedError(Exception):
+    """Exception raised, when connecting to the session bus is not possible."""
     pass
