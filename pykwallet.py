@@ -33,7 +33,6 @@ class KWallet(object):
         object_path = u'/modules/kwalletd'
         self.__kw = self.__bus.get_object(name, object_path)
         interface = u'org.kde.KWallet'
-        # kwallet will be started if needed
         self.iface = dbus.Interface(self.__kw, dbus_interface=interface)
         if wallet:
             self.wallet = wallet
