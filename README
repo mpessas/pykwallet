@@ -1,0 +1,3 @@
+Pykwallet is a simple tool to store and retrieve data from KDE's KWallet subsystem for secure data storage.
+
+It uses dbus to connect and communicate with KWallet.
