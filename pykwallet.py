@@ -92,16 +92,19 @@ class KWallet(object):
         """Decode a dbus.ByteArray based on a qmap.
 
         The first 4 bytes are the number of entries."""
-        length = self._binary_to_int(value[:4])
         info = {}
         value = value[4:]
-        for i in xrange(length):
+        for (entry, data) in self._next_data(value):
+            info[entry] = data
+        return info
+
+    def _next_data(self, value):
+        while value:
             (entry, length) = self._next_entry(value)
             value = value[length:]
             (data, length) = self._next_entry(value)
             value = value[length:]
-            info[entry] = data
-        return info
+            yield (entry, data)
 
     def _encode(self, value):
         """Encode a dict to a dbus.ByteArray."""
