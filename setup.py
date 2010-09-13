@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup (
     name = "pykwallet",
-    version = "0.3",
+    version = "0.4",
     packages = ["pykwallet", ],
     author = "Apostolos Bessas",
     author_email = "mpessas@gmail.com",

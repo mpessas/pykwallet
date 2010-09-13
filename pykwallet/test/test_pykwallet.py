@@ -32,7 +32,6 @@ class TestKWallet(unittest.TestCase):
         value = u"value"
         self.kw.set(entry, value, key)
         self.assertEqual(self.kw.get(entry, key), value)
-        
 
     def test_set(self):
         entry = "test"
